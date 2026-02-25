@@ -2,14 +2,14 @@
 ## OBIS occurrence download + WoRMS AphiaID matching (SHELLFUTURE)
 ## ============================================================
 
-# >>> UPDATED: load packages only once (and in a consistent order)
+# >>> load packages only once (and in a consistent order)
 library(robis)
 library(dplyr)
 library(sf)
 library(worrms)
 library(purrr)
 
-# >>> UPDATED: basic input checks to avoid silent errors
+# >>> basic input checks to avoid silent errors
 if (!exists("study_areas_final_v3")) {
   stop("[STOP] Object 'study_areas_final_v3' not found. Please load it before running this script.")
 }
@@ -20,7 +20,7 @@ if (!("Region" %in% names(study_areas_final_v3))) {
   stop("[STOP] Column 'Region' not found in 'study_areas_final_v3'.")
 }
 
-# >>> UPDATED: define target groups (same content, English comment)
+# >>> define target groups
 target_groups <- c("Bivalvia", "Gastropoda", "Brachiopoda")
 
 # Create an empty list to store results
@@ -31,10 +31,10 @@ all_species_data <- list()
 # ------------------------------------------------------------
 for (reg_name in unique(study_areas_final_v3$Region)) {
   
-  # >>> UPDATED: English message + safer formatting
+  # >>> 
   message(sprintf("Fetching region: %s ...", reg_name))
   
-  # >>> UPDATED: safer geometry handling:
+  # >>> safer geometry handling:
   # - subset sf
   # - union in case the same Region has multiple polygons
   # - convert to a single WKT string
@@ -48,7 +48,7 @@ for (reg_name in unique(study_areas_final_v3$Region)) {
     
     message(sprintf("  -- Fetching taxon/group: %s", taxon))
     
-    # >>> UPDATED: keep tryCatch, but also set verbose=FALSE explicitly
+    # >>> keep tryCatch, but also set verbose=FALSE explicitly
     # NOTE: robis::occurrence can return large data; consider limiting fields to what you really need.
     occ <- tryCatch({
       occurrence(
@@ -67,7 +67,7 @@ for (reg_name in unique(study_areas_final_v3$Region)) {
       occ$Group  <- taxon
       all_species_data[[paste(reg_name, taxon, sep = "_")]] <- occ
       
-      # >>> UPDATED: English message
+      # >>> 
       message(sprintf("     Retrieved records: %d", nrow(occ)))
     }
   }
@@ -76,7 +76,7 @@ for (reg_name in unique(study_areas_final_v3$Region)) {
 # ------------------------------------------------------------
 # 2) Combine results + quick summary
 # ------------------------------------------------------------
-# >>> UPDATED: handle the "no data" case BEFORE using final_occ_df later
+# >>> handle the "no data" case BEFORE using final_occ_df later
 if (length(all_species_data) > 0) {
   final_occ_df <- bind_rows(all_species_data)
   message("--- Finished fetching all regions ---")
@@ -88,7 +88,7 @@ if (length(all_species_data) > 0) {
 # ------------------------------------------------------------
 # 3) Species list for the next step (trait/taxonomic queries)
 # ------------------------------------------------------------
-# >>> UPDATED: ensure final_occ_df exists and is non-empty (already guaranteed by stop() above)
+# >>> ensure final_occ_df exists and is non-empty (already guaranteed by stop() above)
 species_list <- final_occ_df %>%
   filter(!is.na(species) & species != "") %>%
   distinct(species, .keep_all = TRUE) %>%
@@ -105,12 +105,12 @@ final_occ_cleaned <- final_occ_df %>%
 
 saveRDS(final_occ_cleaned, "SHELLFUTURE_Occurrences_Raw_v1.rds")
 
-# >>> UPDATED: remove hard-coded "2.1 million" and report the real number
+# >>> remove hard-coded "2.1 million" and report the real number
 message(sprintf("Successfully saved %s records to RDS!",
                 format(nrow(final_occ_cleaned), big.mark = ",")))
 
 # --- Future Load Command ---
-# >>> UPDATED: correct object name in the comment (cleaned data is what you saved)
+# >>> correct object name in the comment (cleaned data is what you saved)
 # final_occ_cleaned <- readRDS("SHELLFUTURE_Occurrences_Raw_v1.rds")
 
 
@@ -118,7 +118,7 @@ message(sprintf("Successfully saved %s records to RDS!",
 ## 5) WoRMS matching (AphiaID) with checkpoint/resume
 ## ============================================================
 
-# >>> UPDATED: prepare unique species vector from species_list (already cleaned)
+# >>> prepare unique species vector from species_list (already cleaned)
 species_to_match <- species_list %>%
   distinct(species) %>%
   pull(species)
@@ -130,7 +130,7 @@ message(sprintf("Total unique species to match in WoRMS: %s",
 output_file <- "worms_matches_checkpoint.csv"
 batch_size  <- 50  # save progress every 50 species
 
-# >>> UPDATED: helper to safely extract a field from a possibly inconsistent WoRMS return
+# >>> helper to safely extract a field from a possibly inconsistent WoRMS return
 get_first_nonnull <- function(x, keys) {
   for (k in keys) {
     if (!is.null(x[[k]]) && length(x[[k]]) > 0 && !is.na(x[[k]][1])) return(x[[k]][1])
@@ -142,7 +142,7 @@ get_first_nonnull <- function(x, keys) {
 if (file.exists(output_file)) {
   matched_data <- read.csv(output_file, stringsAsFactors = FALSE)
   
-  # >>> UPDATED: be defensive about column existence (older checkpoints, manual edits, etc.)
+  # >>> be defensive about column existence (older checkpoints, manual edits, etc.)
   if (!("query_name" %in% names(matched_data))) {
     stop("[STOP] Checkpoint file exists but has no 'query_name' column: ", output_file)
   }
@@ -184,7 +184,7 @@ match_worms_safe <- function(name) {
       ))
     }
     
-    # >>> UPDATED: take the first/best match row
+    # >>> take the first/best match row
     res1 <- res[1, ]
     
     aphia_id <- get_first_nonnull(res1, c("AphiaID", "AphiaId", "aphiaID", "aphiaid"))
@@ -242,7 +242,7 @@ summary_stats <- matched_data %>%
   )
 print(summary_stats)
 
-# >>> UPDATED (optional but useful): join AphiaID back to your species list and save
+# >>> (optional but useful): join AphiaID back to your species list and save
 species_with_aphia <- species_list %>%
   left_join(matched_data %>% select(query_name, aphiaid, scientificname, status),
             by = c("species" = "query_name"))
