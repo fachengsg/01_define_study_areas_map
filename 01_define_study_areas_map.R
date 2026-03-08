@@ -65,11 +65,11 @@ atl_n_pts <- matrix(c(
 
 # 3. Eastern Atlantic (South): NE corner shifted north to 36.0N to align with Atl-North
 atl_s_pts <- matrix(c(
-  -20.0, 12.0,
-  -5.7, 12.0,
+  -30.0, 10.0,
+  -5.7, 10.0,
   -5.7, 36.0,  # north anchor aligned with the Gibraltar axis
   -10.0, 37.0,
-  -20.0, 37.0
+  -30.0, 37.0
 ), ncol = 2, byrow = TRUE)
 
 # ----------------------------
@@ -132,4 +132,4 @@ p <- ggplot() +
 print(p)
 
 # Optional: save figure (recommended for GitHub repo outputs/)
-# ggsave("outputs/study_areas_v3_final.png", p, width = 10, height = 6, dpi = 300)
+# ggsave("study_areas_v3_final.png", p, width = 10, height = 6, dpi = 300)
