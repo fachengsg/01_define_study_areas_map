@@ -86,8 +86,8 @@ dedup_dt <- dt[, .(
   n_raw_records    = .N
 ), by = .(Region, Group, species = species_std, lat_bin, lon_bin)]
 
-saveRDS(dedup_dt, sprintf("final_occ_dedup_grid_%sdeg.rds", GRID_RES_DEG))
-fwrite(dedup_dt,  sprintf("final_occ_dedup_grid_%sdeg.csv", GRID_RES_DEG))
+saveRDS(dedup_dt, sprintf("final_occ_dedup_grid_0.01deg.rds", GRID_RES_DEG))
+fwrite(dedup_dt,  sprintf("final_occ_dedup_grid_0.01deg.csv", GRID_RES_DEG))
 
 # -----------------------------------------------------------------------------
 # 3.5) Summary AFTER thinning (Region x Group)
@@ -149,8 +149,8 @@ for (k in K_LEVELS) {
   # global summary across regions
   global_sum <- k_dt[, .(
     K = k,
-    n_rows_region_species = .N,          # ~350 for K80 (depends on data)
-    n_species_unique = uniqueN(species), # ~270–280 for K80 (depends on data)
+    n_rows_region_species = .N,          
+    n_species_unique = uniqueN(species), 
     cells_selected_total = sum(cells)
   )]
   
